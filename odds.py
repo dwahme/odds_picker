@@ -11,10 +11,9 @@ def get_true_prob(american_for, american_against):
     real_for = american_to_prob(american_for)
     real_against = 1 - american_to_prob(american_against)
 
-    print(real_for, real_against)
-    print((real_for + real_against) / 2, 1 - real_for - real_against)
+    print("vs", real_for, real_against)
 
-    return (real_for + real_against) / 2
+    return real_for - .025
 
 def american_to_mult(odds):
 
@@ -29,11 +28,11 @@ def kelly(mult, prob):
 
 def run_odds(american_for, american_against, boost):
     prob = get_true_prob(american_for, american_against)
-    mult = american_to_mult(american_for + boost)
+    mult = american_to_mult(boost)
     mult_orig = american_to_mult(american_for)
     print(kelly(mult_orig, prob))
 
     return kelly(mult, prob)
 
 if __name__ == "__main__":
-    print(run_odds(-114, -112, 0))
+    print(run_odds(200, -385, 220))
