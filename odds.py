@@ -67,12 +67,18 @@ if __name__ == "__main__":
         if args.frac != None:
             f = f * args.frac
             print(f"The reduced fraction of your money that should be bet is: {f * 100:.2f}%")
-    
-        if args.money != None:
-            tot = args.money * f
-            print(f"\nYou should bet: ${tot:.2f}")
-            print(f"Potential winnings: ${tot * mult:.2f}")
 
-    # o = run_odds(138, -385, 207)
+        if f <= 0:
+            print("\nThis bet is not worth it")
+    
+        if args.money != None and f > 0:
+            tot = args.money * f
+            pot = tot * (mult + 1)
+            net = pot * succ - tot
+            print(f"\nYou should bet: ${tot:.2f}")
+            print(f"Potential winnings: ${pot:.2f}")
+            print(f"Average net profit: ${pot:.2f} * {succ * 100:.2f}% - ${tot:.2f} = ${net:.2f}")
+
+    # o = run_odds(138, 207)
     # print(o/2)
     # print(62.38 * o, 62.38 * o / 2)
