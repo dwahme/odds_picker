@@ -1,3 +1,4 @@
+import argparse
 
 # https://help.smarkets.com/hc/en-gb/articles/214058369-How-to-calculate-implied-probability-in-betting
 def american_to_prob(odds):
@@ -7,13 +8,16 @@ def american_to_prob(odds):
 
     return 100 / (odds + 100)
 
-def get_true_prob(american_for, american_against):
+def get_true_prob_single(american_for):
+    real_for = american_to_prob(american_for)
+
+    return real_for - .025
+
+def get_true_prob_ave(american_for, american_against):
     real_for = american_to_prob(american_for)
     real_against = 1 - american_to_prob(american_against)
 
-    print("vs", real_for, real_against)
-
-    return real_for - .025
+    return (real_for - real_against) / 2
 
 def american_to_mult(odds):
 
@@ -26,13 +30,49 @@ def american_to_mult(odds):
 def kelly(mult, prob):
     return (prob * (mult + 1) - 1) / mult
 
-def run_odds(american_for, american_against, boost):
-    prob = get_true_prob(american_for, american_against)
+def run_odds(american_for, boost):
+    prob = get_true_prob_single(american_for)
     mult = american_to_mult(boost)
-    mult_orig = american_to_mult(american_for)
-    print(kelly(mult_orig, prob))
 
     return kelly(mult, prob)
 
 if __name__ == "__main__":
-    print(run_odds(200, -385, 220))
+    parser = argparse.ArgumentParser(description='Run odds')
+    parser.add_argument('american_for', action='store', type=int,
+                        help='The American odds of the bet going in your favor')
+    parser.add_argument('-a', action='store', dest='american_against', type=int, default=None,
+                        help='The American odds of the bet in the opposite favor')
+    parser.add_argument('-b', action='store', dest='boost', type=int, default=None,
+                        help='The American odds that the bet gets boosted to')
+    parser.add_argument('-f', action='store', dest='frac', type=float, default=0.5,
+                        help='The fraction to reduce the kelly bet size by (default: 0.5)')
+    parser.add_argument('-m', action='store', dest='money', type=float, default=None,
+                        help='The amount of money you have available')
+
+    args = parser.parse_args()
+
+    succ = get_true_prob_single(args.american_for)
+    print(f"The single-estimate probability of success is: {100 * succ:.3f}%")
+
+    if args.american_against != None:
+        succ = get_true_prob_ave(args.american_for, args.american_against)
+        print(f"The averaged probability of success is: {100 * succ:.3f}%")
+
+    if args.boost != None:
+        mult = american_to_mult(args.boost)
+        print(f"The profit multiplier from this bet is: {mult}x")
+        f = kelly(mult, succ)
+        print(f"The original kelly fraction of your money that should be bet is: {f * 100:.2f}%")
+
+        if args.frac != None:
+            f = f * args.frac
+            print(f"The reduced fraction of your money that should be bet is: {f * 100:.2f}%")
+    
+        if args.money != None:
+            tot = args.money * f
+            print(f"\nYou should bet: ${tot:.2f}")
+            print(f"Potential winnings: ${tot * mult:.2f}")
+
+    # o = run_odds(138, -385, 207)
+    # print(o/2)
+    # print(62.38 * o, 62.38 * o / 2)
